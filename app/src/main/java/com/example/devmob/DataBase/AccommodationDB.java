@@ -8,18 +8,20 @@ import androidx.room.RoomDatabase;
 
 import com.example.devmob.DAO.AccommodationDAO;
 import com.example.devmob.entity.Accommodation;
+import com.example.devmob.DAO.EventDAO;
+import com.example.devmob.entity.Event;
 
-@Database(entities = {Accommodation.class}, version = 2)
+@Database(entities = {Accommodation.class, Event.class}, version = 3)
 public abstract class AccommodationDB extends RoomDatabase {
     private static AccommodationDB instance;
 
     public abstract AccommodationDAO accommodationDao();
+    public abstract EventDAO eventDao();
 
-    // Updated method to ensure context is passed properly
     public static synchronized AccommodationDB getInstance(Context context) {
         if (instance == null) {
             instance = Room.databaseBuilder(context.getApplicationContext(),
-                            AccommodationDB.class, "accommodation_database")
+                            AccommodationDB.class, "app_database")
                     .fallbackToDestructiveMigration()
                     .build();
         }

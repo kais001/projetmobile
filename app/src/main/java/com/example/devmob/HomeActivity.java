@@ -34,15 +34,16 @@ public class HomeActivity extends AppCompatActivity {
         bottomNavigationView.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId();
 
+
             if (itemId == R.id.allAccommodations) {
                 // Navigate to All_AccommodationF Fragment
-                replaceFragment(new All_AccF());
-            } else if (itemId == R.id.Rec) {
+                replaceFragment(new All_EventF());
+            }  else if (itemId == R.id.myNote) {
                 // Navigate to AddAccommodationF Fragment
-                replaceFragment(new All_AccF_Client());
+                replaceFragment(new All_EventFclient());
             }  else if (itemId == R.id.addacc) {
                 // Navigate to RegisterActivity via an Intent
-                Intent registerIntent = new Intent(HomeActivity.this, AddAccommodationActivity.class);
+                Intent registerIntent = new Intent(HomeActivity.this, AddEventActivity.class);
                 startActivity(registerIntent);  // Launch RegisterActivity
             }
 

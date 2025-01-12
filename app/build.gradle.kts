@@ -46,7 +46,7 @@ dependencies {
 
     // Nouvelle dépendance pour les services de localisation
     implementation("com.google.android.gms:play-services-location:21.0.1")
-
+    implementation("com.google.android.material:material:1.9.0") // Use the latest version
     // Dépendances de test
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
