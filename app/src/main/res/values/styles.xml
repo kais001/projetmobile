@@ -1,0 +1,14 @@
+<resources>
+
+    <!-- Exemple de thème personnalisé -->
+    <style name="Theme.MobHoussem" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/Bar</item> <!-- Utilisation de Bar pour colorPrimary -->
+        <item name="colorPrimaryVariant">@color/orange</item> <!-- Utilisation de orange pour colorPrimaryVariant -->
+        <item name="colorOnPrimary">@color/white</item> <!-- Utilisation de white pour colorOnPrimary -->
+        <item name="colorSecondary">@color/greencha3chou3i</item> <!-- Utilisation de greencha3chou3i pour colorSecondary -->
+        <item name="colorOnSecondary">@color/white</item> <!-- Utilisation de white pour colorOnSecondary -->
+        <item name="android:textColorPrimary">@color/black</item> <!-- Utilisation de black pour texte principal -->
+        <item name="android:textColorSecondary">@color/LightCoral</item> <!-- Utilisation de LightCoral pour texte secondaire -->
+    </style>
+
+</resources>

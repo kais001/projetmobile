@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Gradient stripe with red, orange, and yellow -->
+    <item android:left="10dp" android:right="10dp" android:top="10dp" android:bottom="10dp">
+        <shape android:shape="rectangle">
+            <gradient
+                android:startColor="#00BFA5"
+                android:centerColor="#40C4FF"
+
+                android:type="linear"
+                android:angle="0"/>
+            <corners android:radius="20dp" />
+        </shape>
+    </item>
+
+    <!-- Gradient stripe with yellow, white, and light green -->
+    <item android:left="10dp" android:right="10dp" android:top="43dp" android:bottom="10dp">
+        <shape android:shape="rectangle">
+            <gradient
+
+                android:centerColor="#C7D7DD"
+                android:endColor="#18FFFF"
+                android:type="linear"
+                android:angle="0"/>
+            <corners android:radius="20dp" />
+        </shape>
+    </item>
+
+    <!-- Gradient stripe with light green, green, and dark green -->
+    <item android:left="10dp" android:right="10dp" android:top="76dp" android:bottom="10dp">
+        <shape android:shape="rectangle">
+            <gradient
+                android:startColor="#64FFDA"
+                android:centerColor="#448AFF"
+                android:endColor="#4B6B9F"
+                android:type="linear"
+                android:angle="0"/>
+            <corners android:radius="20dp" />
+        </shape>
+    </item>
+</layer-list>
