@@ -1,9 +1,7 @@
 package tn.esprit.finalproject;
 
 import android.os.Bundle;
-import android.os.Handler;
 import android.text.InputType;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,35 +14,16 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.firestore.FirebaseFirestore;
-
-import java.util.HashMap;
-import java.util.Objects;
 
 import tn.esprit.finalproject.Database.AppDatabase;
 import tn.esprit.finalproject.Entity.User;
 
 public class SignUpFragment extends Fragment {
 
-    private FirebaseAuth firebaseAuth;
-    private FirebaseFirestore firestore;
-    private Handler handler;
-    private int checkAttempts = 0;
-    private static final int MAX_ATTEMPTS = 10;
-    private static final int ATTEMPT_DELAY = 3000;
-
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_sign_up, container, false);
-
-        firebaseAuth = FirebaseAuth.getInstance();
-        firestore = FirebaseFirestore.getInstance();
-        handler = new Handler();
 
         EditText usernameEditText = view.findViewById(R.id.usernameEditText);
         EditText emailEditText = view.findViewById(R.id.signUpEmailEditText);
@@ -65,7 +44,8 @@ public class SignUpFragment extends Fragment {
             String confirmPassword = confirmsignUpPasswordEditText.getText().toString().trim();
 
             if (validateInput(email, username, password, confirmPassword)) {
-                registerUser(email, username, password);
+                // Check if email already exists in Room database
+                checkIfEmailExistsAndSaveUser(email, username, password);
             }
         });
 
@@ -112,139 +92,37 @@ public class SignUpFragment extends Fragment {
         return true;
     }
 
-    private void registerUser(String email, String username, String password) {
-        firebaseAuth.createUserWithEmailAndPassword(email, password)
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        FirebaseUser user = firebaseAuth.getCurrentUser();
-                        if (user != null) {
-                            saveUserToFirestore(user.getUid(), email, username, password);
-                            saveUserToRoom(user.getUid(), email, username, password);
-                            sendVerificationEmail(user);
-                        }
-                    } else {
-                        Toast.makeText(getActivity(), "Sign-up failed: " + Objects.requireNonNull(task.getException()).getMessage(), Toast.LENGTH_SHORT).show();
-                    }
-                });
-    }
-
-    private void saveUserToRoom(String userId, String email, String username, String password) {
-        User user = new User(userId, email, username, password, false);
+    private void saveUserToRoom(String email, String username, String password) {
+        User user = new User(null, email, username, password);
         AppDatabase db = AppDatabase.getInstance(requireContext());
         new Thread(() -> db.userDao().insert(user)).start();
-    }
-
-    private void sendVerificationEmail(FirebaseUser user) {
-        user.sendEmailVerification()
-                .addOnCompleteListener(verificationTask -> {
-                    if (verificationTask.isSuccessful()) {
-                        Toast.makeText(getActivity(), "Verification email sent. Please check your inbox.", Toast.LENGTH_LONG).show();
-                        startEmailVerificationCheck(user);
-                    } else {
-                        Toast.makeText(getActivity(), "Failed to send verification email.", Toast.LENGTH_SHORT).show();
-                    }
-                });
-    }
-
-    private void startEmailVerificationCheck(FirebaseUser user) {
-        checkAttempts = 0;
-        handler.postDelayed(() -> checkEmailVerificationStatus(user), ATTEMPT_DELAY);
-    }
-
-    private void checkEmailVerificationStatus(FirebaseUser user) {
-        if (user != null) {
-            user.reload()
-                    .addOnCompleteListener(task -> {
-                        if (task.isSuccessful()) {
-                            if (user.isEmailVerified()) {
-                                updateEmailVerifiedStatus(user.getUid());
-                                updateEmailVerifiedInRoom(user.getUid(), true);
-                            } else if (checkAttempts < MAX_ATTEMPTS) {
-                                checkAttempts++;
-                                handler.postDelayed(() -> checkEmailVerificationStatus(user), ATTEMPT_DELAY);
-                            } else {
-                                // Safely check if the fragment is still attached
-                                if (isAdded() && getActivity() != null) {
-                                    Toast.makeText(getActivity(), "Verification email expired or failed.", Toast.LENGTH_LONG).show();
-                                } else {
-                                    Log.e("SignUpFragment", "Fragment not attached, cannot show Toast.");
-                                }
-                            }
-                        } else {
-                            Log.e("Reload Error", "Error reloading user", task.getException());
-                        }
-                    });
-        }
-    }
-
-
-    private void updateEmailVerifiedInRoom(String userId, boolean isVerified) {
-        new Thread(() -> {
-            AppDatabase db = AppDatabase.getInstance(requireContext());
-            User user = db.userDao().findByUserId(userId);
-            if (user != null) {
-                user.setEmailVerified(isVerified);
-                db.userDao().update(user);
-            } else {
-                Log.e("Room", "User not found in Room database");
-            }
-        }).start();
-    }
-
-    private void updateEmailVerifiedStatus(String userId) {
-        HashMap<String, Object> updates = new HashMap<>();
-        updates.put("isEmailVerified", true);
-
-        firestore.collection("users")
-                .document(userId)
-                .update(updates)
-                .addOnSuccessListener(aVoid -> {
-                    Log.d("Firestore", "Email verified status updated in Firestore");
-                    Toast.makeText(getActivity(), "Email verified! You can now log in.", Toast.LENGTH_SHORT).show();
-                    navigateToLogin();
-                })
-                .addOnFailureListener(e -> Log.e("Firestore", "Error updating email verification status", e));
-    }
-
-    private void saveUserToFirestore(String userId, String email, String username, String password) {
-        HashMap<String, Object> userMap = new HashMap<>();
-        userMap.put("email", email);
-        userMap.put("username", username);
-        userMap.put("password", password);
-        userMap.put("isEmailVerified", false);
-
-        firestore.collection("users").document(userId)
-                .set(userMap)
-                .addOnSuccessListener(aVoid -> Log.d("Firestore", "User data successfully saved"))
-                .addOnFailureListener(e -> Log.e("Firestore", "Error saving user data", e));
-    }
-
-    private void navigateToLogin() {
-        FragmentManager fragmentManager = requireActivity().getSupportFragmentManager();
-        fragmentManager.beginTransaction()
-                .replace(R.id.fragment_container, new LoginFragment())
-                .commit();
     }
 
     private boolean isValidEmail(String email) {
         return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches();
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        //checkEmailVerificationAndUpdateFirestore();
-    }
+    private void checkIfEmailExistsAndSaveUser(String email, String username, String password) {
+        AppDatabase db = AppDatabase.getInstance(requireContext());
+        new Thread(() -> {
+            User existingUser = db.userDao().findByEmail(email);
+            if (existingUser != null) {
+                // If user already exists with the same email, show a Toast message
+                requireActivity().runOnUiThread(() -> {
+                    Toast.makeText(getActivity(), "Email is already in use", Toast.LENGTH_SHORT).show();
+                });
+            } else {
+                // If email is not taken, proceed to save the new user
+                saveUserToRoom(email, username, password);
+                requireActivity().runOnUiThread(() -> {
+                    Toast.makeText(getActivity(), "User registered successfully!", Toast.LENGTH_SHORT).show();
 
-    private void checkEmailVerificationAndUpdateFirestore() {
-        FirebaseUser user = firebaseAuth.getCurrentUser();
-        if (user != null) {
-            user.reload()
-                    .addOnCompleteListener(task -> {
-                        if (task.isSuccessful() && user.isEmailVerified()) {
-                            updateEmailVerifiedStatus(user.getUid());
-                        }
-                    });
-        }
+                    // Redirect to login fragment
+                    if (getActivity() instanceof MainActivity) {
+                        ((MainActivity) getActivity()).loadFragment(new LoginFragment());
+                    }
+                });
+            }
+        }).start();
     }
 }

@@ -1,6 +1,5 @@
 package tn.esprit.finalproject;
 
-import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.text.InputType;
 import android.text.TextUtils;
@@ -15,12 +14,6 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
-
-import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.FirebaseFirestore;
-
-import java.util.HashMap;
-import java.util.Map;
 
 import tn.esprit.finalproject.Database.AppDatabase;
 import tn.esprit.finalproject.Entity.User;
@@ -47,7 +40,6 @@ public class UpdateUserDialogFragment extends DialogFragment {
         return fragment;
     }
 
-    @SuppressLint("MissingInflatedId")
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -66,8 +58,9 @@ public class UpdateUserDialogFragment extends DialogFragment {
 
         if (getArguments() != null) {
             user = (User) getArguments().getSerializable("user");
-            assert user != null;
-            usernameEditText.setText(user.getUsername());
+            if (user != null) {
+                usernameEditText.setText(user.getUsername());
+            }
         }
 
         updateButton.setOnClickListener(v -> {
@@ -77,29 +70,34 @@ public class UpdateUserDialogFragment extends DialogFragment {
 
             if (validateInput(newUsername, newPassword, confirmPassword)) {
                 user.setUsername(newUsername);
+
                 if (!TextUtils.isEmpty(newPassword)) {
                     user.setPassword(newPassword);
+                } else {
+                    // Keep the old password
+                    new Thread(() -> {
+                        AppDatabase db = AppDatabase.getInstance(requireContext());
+                        User currentUser = db.userDao().findById(user.getId());
+                        if (currentUser != null) {
+                            user.setPassword(currentUser.getPassword());
+                        }
+                    }).start();
                 }
 
                 new Thread(() -> {
                     AppDatabase db = AppDatabase.getInstance(requireContext());
-                    db.userDao().update(user); // Update Room database
+                    db.userDao().update(user); // Update the Room database
 
                     requireActivity().runOnUiThread(() -> {
                         if (listener != null) {
-                            listener.onUserUpdated(user);
+                            listener.onUserUpdated(user); // Notify the listener to update the UI
                         }
-                        Toast.makeText(getActivity(), "User updated successfully in Room", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getActivity(), "User updated successfully", Toast.LENGTH_SHORT).show();
                         dismiss(); // Close the dialog
                     });
-
-                    // Update Firestore
-                    updateFirestoreUser(user);
                 }).start();
             }
         });
-
-
 
         cancelButton.setOnClickListener(v -> dismiss());
 
@@ -108,20 +106,24 @@ public class UpdateUserDialogFragment extends DialogFragment {
 
     private boolean validateInput(String username, String password, String confirmPassword) {
         if (TextUtils.isEmpty(username)) {
-            Toast.makeText(getActivity(), "Username is required", Toast.LENGTH_SHORT).show();
+            usernameEditText.setError("Username is required");
             return false;
         }
-
         if (!TextUtils.isEmpty(password)) {
             if (password.length() < 6) {
                 Toast.makeText(getActivity(), "Password must be at least 6 characters", Toast.LENGTH_SHORT).show();
+                return false;
+            } else if (!password.matches(".*[A-Z].*")) {
+                Toast.makeText(getActivity(), "Password must contain at least one uppercase letter", Toast.LENGTH_SHORT).show();
+                return false;
+            } else if (!password.matches(".*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>/?`~].*")) {
+                Toast.makeText(getActivity(), "Password must contain at least one special character", Toast.LENGTH_SHORT).show();
                 return false;
             } else if (!password.equals(confirmPassword)) {
                 Toast.makeText(getActivity(), "Passwords do not match", Toast.LENGTH_SHORT).show();
                 return false;
             }
         }
-
         return true;
     }
 
@@ -135,42 +137,4 @@ public class UpdateUserDialogFragment extends DialogFragment {
         }
         editText.setSelection(editText.getText().length());
     }
-
-    @SuppressLint("SetTextI18n")
-    private void updateFirestoreUser(User updatedUser) {
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-
-        db.collection("users")
-                .whereEqualTo("email", updatedUser.getEmail())
-                .get()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful() && !task.getResult().isEmpty()) {
-                        DocumentSnapshot document = task.getResult().getDocuments().get(0);
-
-                        Map<String, Object> updatedData = new HashMap<>();
-                        updatedData.put("username", updatedUser.getUsername());
-                        if (!TextUtils.isEmpty(updatedUser.getPassword())) {
-                            updatedData.put("password", updatedUser.getPassword());
-                        }
-
-                        document.getReference().update(updatedData)
-                                .addOnSuccessListener(aVoid -> {
-                                    if (isAdded()) { // Check if fragment is attached
-                                        Toast.makeText(requireContext(), "Firestore updated successfully", Toast.LENGTH_SHORT).show();
-                                    }
-                                })
-                                .addOnFailureListener(e -> {
-                                    if (isAdded()) { // Check if fragment is attached
-                                        Toast.makeText(requireContext(), "Failed to update Firestore", Toast.LENGTH_SHORT).show();
-                                    }
-                                });
-                    } else {
-                        if (isAdded()) { // Check if fragment is attached
-                            Toast.makeText(requireContext(), "User not found in Firestore", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                });
-    }
-
-
 }

@@ -1,6 +1,5 @@
 package tn.esprit.finalproject.Entity;
 
-import androidx.annotation.NonNull;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
@@ -9,9 +8,8 @@ import java.io.Serializable;
 
 @Entity(tableName = "users")
 public class User implements Serializable {
-    @PrimaryKey
-    @NonNull
-    private String id;
+    @PrimaryKey(autoGenerate = true)
+    private Long id;
 
     @ColumnInfo(name = "email")
     private String email;
@@ -21,24 +19,20 @@ public class User implements Serializable {
 
     private String password;
 
-    private boolean emailVerified;
-
     // Constructor with default emailVerified value
-    public User(@NonNull String id, String email, String username, String password, boolean emailVerified) {
+    public User(Long id, String email, String username, String password) {
         this.id = id;
         this.email = email;
         this.username = username;
         this.password = password;
-        this.emailVerified = emailVerified;
     }
 
     // Getters and setters
-    @NonNull
-    public String getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(@NonNull String id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -64,13 +58,5 @@ public class User implements Serializable {
 
     public void setUsername(String username) {
         this.username = username;
-    }
-
-    public boolean isEmailVerified() {
-        return emailVerified;
-    }
-
-    public void setEmailVerified(boolean emailVerified) {
-        this.emailVerified = emailVerified;
     }
 }

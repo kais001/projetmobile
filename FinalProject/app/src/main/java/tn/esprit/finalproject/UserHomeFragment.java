@@ -8,6 +8,7 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -37,6 +38,8 @@ public class UserHomeFragment extends Fragment {
         TextView usernameTextView = view.findViewById(R.id.usernameTextView);
         drawerLayout = view.findViewById(R.id.drawer_layout);
         navigationView = view.findViewById(R.id.nav_view);
+        ImageView iconSettings = view.findViewById(R.id.icon_settings);
+        ImageView iconLogout = view.findViewById(R.id.icon_logout);
 
         // Setup toolbar
         Toolbar toolbar = view.findViewById(R.id.toolbar);
@@ -57,6 +60,10 @@ public class UserHomeFragment extends Fragment {
 
         // Handle navigation item clicks
         navigationView.setNavigationItemSelectedListener(this::onNavigationItemSelected);
+
+        // Set onClickListeners for the icons
+        iconSettings.setOnClickListener(v -> openSettings());
+        iconLogout.setOnClickListener(v -> logoutUser());
 
         return view;
     }
@@ -82,10 +89,19 @@ public class UserHomeFragment extends Fragment {
         return true;
     }
 
+    private void openSettings() {
+        FragmentManager fragmentManager = requireActivity().getSupportFragmentManager();
+        fragmentManager.beginTransaction()
+                .replace(R.id.fragment_container, new UserProfileFragment())
+                .addToBackStack(null)
+                .commit();
+    }
+
     private void logoutUser() {
         Context context = requireContext();
         context.getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
                 .edit()
+                .putBoolean("isLoggedIn", false)
                 .apply();
 
         // Navigate to LoginFragment

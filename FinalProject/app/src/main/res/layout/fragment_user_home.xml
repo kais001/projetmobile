@@ -43,6 +43,56 @@
                 android:textSize="18sp"
                 android:textColor="?attr/colorPrimaryVariant"
                 android:layout_marginBottom="32dp" />
+
+            <!-- Icon Section -->
+            <ImageView
+                android:id="@+id/icon_settings"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:src="@drawable/ic_settings"
+                android:contentDescription="Profile Icon"
+                android:layout_marginBottom="16dp" />
+
+            <ImageView
+                android:id="@+id/icon_kais"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:src="@drawable/ic_visibility_off"
+                android:contentDescription="Profile Icon"
+                android:layout_marginBottom="16dp" />
+
+            <ImageView
+                android:id="@+id/icon_houssem"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:src="@drawable/ic_visibility_off"
+                android:contentDescription="Profile Icon"
+                android:layout_marginBottom="16dp" />
+
+            <ImageView
+                android:id="@+id/icon_aziz"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:src="@drawable/ic_visibility_off"
+                android:contentDescription="Profile Icon"
+                android:layout_marginBottom="16dp" />
+
+            <ImageView
+                android:id="@+id/icon_ahmed"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:src="@drawable/ic_visibility_off"
+                android:contentDescription="Profile Icon"
+                android:layout_marginBottom="16dp" />
+
+            <ImageView
+                android:id="@+id/icon_logout"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:src="@drawable/ic_logout"
+                android:contentDescription="Settings Icon"
+                android:layout_marginBottom="16dp" />
+
         </LinearLayout>
     </LinearLayout>
 
@@ -54,4 +104,5 @@
         android:layout_gravity="start"
         app:menu="@menu/user_navigation_menu"
         app:headerLayout="@layout/nav_header" />
+
 </androidx.drawerlayout.widget.DrawerLayout>

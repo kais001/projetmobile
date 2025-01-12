@@ -5,6 +5,10 @@ import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.InputType;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -19,13 +23,6 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-
 import java.util.concurrent.Executor;
 
 import tn.esprit.finalproject.Database.AppDatabase;
@@ -39,6 +36,16 @@ public class LoginFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_login, container, false);
+
+        // Check if user is already logged in
+        SharedPreferences sharedPreferences = requireContext().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);
+        boolean isLoggedIn = sharedPreferences.getBoolean("isLoggedIn", false); // Check login status
+
+        // If user is logged in, navigate directly to UserHomeFragment
+        if (isLoggedIn) {
+            navigateUserToHome();
+            return view;
+        }
 
         // UI Elements
         EditText emailEditText = view.findViewById(R.id.emailEditText);
@@ -79,7 +86,7 @@ public class LoginFragment extends Fragment {
             passwordEditText.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
             togglePasswordVisibility.setImageResource(R.drawable.ic_visibility_off);
         }
-        passwordEditText.setSelection(passwordEditText.getText().length()); // Keep cursor at the end
+        passwordEditText.setSelection(passwordEditText.getText().length());
     }
 
     private void handleLogin(EditText emailEditText, EditText passwordEditText) {
@@ -99,93 +106,44 @@ public class LoginFragment extends Fragment {
             editor.putString("username", "sys");
             editor.putString("password", "sys");
             editor.putString("email", "Administrator Account");
+            editor.putBoolean("isLoggedIn", false);
             editor.apply();
 
             navigateToHome();
         } else {
-
             new Thread(() -> {
                 AppDatabase db = AppDatabase.getInstance(requireContext());
                 User user = db.userDao().findByEmailOrUsername(identifier);
 
                 requireActivity().runOnUiThread(() -> {
-                    if (user == null) {
+                    if (user == null || !user.getPassword().equals(password)) {
                         Toast.makeText(getActivity(), "Invalid credentials!", Toast.LENGTH_SHORT).show();
                     } else {
-                        performFirebaseLogin(user, password, db);
+                        updateUserPreferences(user);
+                        Toast.makeText(getActivity(), "Login Successful!", Toast.LENGTH_SHORT).show();
+
+                        SharedPreferences sharedPreferences = requireContext().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);
+                        SharedPreferences.Editor editor = sharedPreferences.edit();
+                        editor.putBoolean("isLoggedIn", true);  // Mark user as logged in
+                        editor.apply();
+
+                        navigateUserToHome();
                     }
                 });
             }).start();
         }
     }
 
-    private void performFirebaseLogin(User user, String password, AppDatabase db) {
-        FirebaseAuth auth = FirebaseAuth.getInstance();
-        auth.signInWithEmailAndPassword(user.getEmail(), password).addOnCompleteListener(task -> {
-            if (task.isSuccessful()) {
-                FirebaseUser firebaseUser = auth.getCurrentUser();
-                if (firebaseUser != null) {
-                    firebaseUser.reload().addOnCompleteListener(reloadTask -> {
-                        syncEmailVerificationStatus(user, db);
-                        if (firebaseUser.isEmailVerified()) {
-                            updateUserDatabaseAndPreferences(user, db);
-                            Toast.makeText(getActivity(), "Login Successful!", Toast.LENGTH_SHORT).show();
-                            navigateUserToHome();
-                        } else {
-                            // Resend verification email if not verified
-                            firebaseUser.sendEmailVerification().addOnCompleteListener(emailTask -> {
-                                if (emailTask.isSuccessful()) {
-                                    Toast.makeText(getActivity(), "Email not verified. Verification email resent. Please check your inbox.", Toast.LENGTH_LONG).show();
-                                } else {
-                                    Toast.makeText(getActivity(), "Failed to resend verification email. Try again later.", Toast.LENGTH_SHORT).show();
-                                }
-                            });
-                            auth.signOut();
-                        }
-                    });
-                }
-            } else {
-                Toast.makeText(getActivity(), "Authentication failed. Check your credentials.", Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
+    private void updateUserPreferences(User user) {
+        SharedPreferences sharedPreferences = requireContext().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putLong("id", user.getId());
+        editor.putString("email", user.getEmail());
+        editor.putString("username", user.getUsername());
+        editor.putString("password", user.getPassword());
+        editor.apply();
 
-
-
-    private void syncEmailVerificationStatus(User user, AppDatabase db) {
-        FirebaseAuth auth = FirebaseAuth.getInstance();
-        FirebaseUser firebaseUser = auth.getCurrentUser();
-
-        if (firebaseUser != null) {
-            firebaseUser.reload().addOnCompleteListener(task -> {
-                if (task.isSuccessful()) {
-                    boolean isVerified = firebaseUser.isEmailVerified();
-                    if (user.isEmailVerified() != isVerified) {
-                        new Thread(() -> {
-                            user.setEmailVerified(isVerified);
-                            db.userDao().update(user);
-                        }).start();
-                    }
-                } else {
-                    Toast.makeText(requireContext(), "Failed to sync email verification status.", Toast.LENGTH_SHORT).show();
-                }
-            });
-        }
-    }
-
-    private void updateUserDatabaseAndPreferences(User user, AppDatabase db) {
-        new Thread(() -> {
-            user.setEmailVerified(true);
-            db.userDao().update(user);
-
-            SharedPreferences sharedPreferences = requireContext().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.putString("email", user.getEmail());
-            editor.putString("username", user.getUsername());
-            editor.putString("password", user.getPassword());
-            editor.putBoolean("emailVerified", user.isEmailVerified());
-            editor.apply();
-        }).start();
+        Log.d("UserProfileFragment", "Saved userId: " + user.getId());
     }
 
     private void startBiometricAuthentication() {
@@ -244,6 +202,11 @@ public class LoginFragment extends Fragment {
             requireActivity().runOnUiThread(() -> {
                 if (user != null && user.getEmail().equals(savedEmail)) {
                     Toast.makeText(requireContext(), "Biometric Login Successful!", Toast.LENGTH_SHORT).show();
+
+                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                    editor.putBoolean("isLoggedIn", true);  // Mark user as logged in
+                    editor.apply();
+
                     navigateUserToHome();
                 } else {
                     handleBiometricError(user);

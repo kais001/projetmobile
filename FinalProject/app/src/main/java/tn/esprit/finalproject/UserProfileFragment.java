@@ -1,8 +1,10 @@
 package tn.esprit.finalproject;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -21,11 +23,6 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
 import com.google.android.material.navigation.NavigationView;
-import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.FirebaseFirestore;
-
-import java.util.HashMap;
-import java.util.Map;
 
 import tn.esprit.finalproject.Database.AppDatabase;
 import tn.esprit.finalproject.Entity.User;
@@ -70,6 +67,9 @@ public class UserProfileFragment extends Fragment {
         editButton.setOnClickListener(v -> editUserProfile());
         deleteButton.setOnClickListener(v -> deleteUserAccount());
 
+        // Dynamically update navigation header
+        updateNavigationHeader();
+
         return view;
     }
 
@@ -90,8 +90,20 @@ public class UserProfileFragment extends Fragment {
 
     private void fetchAndDisplayUserData() {
         SharedPreferences sharedPreferences = requireContext().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);
+        long id = sharedPreferences.getLong("id", -1); // Retrieve id
         String username = sharedPreferences.getString("username", "Default User");
         String email = sharedPreferences.getString("email", "default@example.com");
+
+        Log.d("UserProfileFragment", "Fetched id: " + id);
+        Log.d("UserProfileFragment", "Fetched username: " + username);
+        Log.d("UserProfileFragment", "Fetched email: " + email);
+
+        // Check if id is valid
+        if (id == -1) {
+            Toast.makeText(requireContext(), "Error: User ID not found. Please log in again.", Toast.LENGTH_SHORT).show();
+            navigateToLoginFragment();
+            return;
+        }
 
         // Display the data
         usernameTextView.setText(username);
@@ -100,29 +112,61 @@ public class UserProfileFragment extends Fragment {
 
     private void editUserProfile() {
         SharedPreferences sharedPreferences = requireContext().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);
+        long id = sharedPreferences.getLong("id", -1); // Retrieve id
         String username = sharedPreferences.getString("username", "Default User");
         String email = sharedPreferences.getString("email", "default@example.com");
 
+        if (id == -1) {
+            Toast.makeText(requireContext(), "Error: User ID not found.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Log.d("UserProfileFragment", "Editing profile for id: " + id);
+
         // Pass the correct user data to the dialog
         UpdateUserDialogFragment dialogFragment = UpdateUserDialogFragment.newInstance(
-                new User("", email, username, "", true)
+                new User(id, email, username, "") // Ensure id is set
         );
 
         dialogFragment.setOnUserUpdatedListener(updatedUser -> {
             new Thread(() -> {
                 AppDatabase db = AppDatabase.getInstance(requireContext());
-                db.userDao().update(updatedUser);
-                updateFirestoreUser(updatedUser);
+                try {
+                    // Update the user in the Room database
+                    db.userDao().update(updatedUser);
 
-                requireActivity().runOnUiThread(() -> {
-                    fetchAndDisplayUserData(); // Refresh UI
-                    Toast.makeText(requireContext(), "Profile updated successfully", Toast.LENGTH_SHORT).show();
-                });
+                    // Verify the update by querying the updated user
+                    User updatedUserFromDb = db.userDao().findById(updatedUser.getId());
+                    requireActivity().runOnUiThread(() -> {
+                        if (updatedUserFromDb != null &&
+                                updatedUserFromDb.getUsername().equals(updatedUser.getUsername()) &&
+                                updatedUserFromDb.getEmail().equals(updatedUser.getEmail())) {
+
+                            // Update SharedPreferences
+                            SharedPreferences.Editor editor = sharedPreferences.edit();
+                            editor.putString("username", updatedUser.getUsername());
+                            editor.putString("email", updatedUser.getEmail());
+                            editor.apply();
+
+                            fetchAndDisplayUserData(); // Refresh UI
+                            Toast.makeText(requireContext(), "Profile updated successfully", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(requireContext(), "Update verification failed. Please try again.", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                } catch (Exception e) {
+                    Log.e("UserProfileFragment", "Error during update or verification", e);
+                    requireActivity().runOnUiThread(() ->
+                            Toast.makeText(requireContext(), "An error occurred while updating profile.", Toast.LENGTH_SHORT).show()
+                    );
+                }
             }).start();
         });
 
         dialogFragment.show(getChildFragmentManager(), "update_user");
     }
+
+
 
     private void deleteUserAccount() {
         SharedPreferences sharedPreferences = requireContext().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);
@@ -133,7 +177,7 @@ public class UserProfileFragment extends Fragment {
             User user = db.userDao().findByEmail(email);
 
             if (user != null) {
-                db.userDao().delete(user);
+                db.userDao().delete(user); // Delete the user from Room database
                 sharedPreferences.edit().clear().apply(); // Clear preferences after account deletion
 
                 requireActivity().runOnUiThread(() -> {
@@ -147,7 +191,7 @@ public class UserProfileFragment extends Fragment {
     private void logoutUser() {
         requireContext().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
                 .edit()
-                .clear()
+                .putBoolean("isLoggedIn", false)
                 .apply();
         navigateToLoginFragment();
     }
@@ -165,36 +209,29 @@ public class UserProfileFragment extends Fragment {
         transaction.commit();
     }
 
-    private void updateFirestoreUser(User updatedUser) {
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
+    @SuppressLint("SetTextI18n")
+    private void updateNavigationHeader() {
+        if (navigationView != null && navigationView.getHeaderCount() > 0) {
+            View headerView = navigationView.getHeaderView(0);
 
-        db.collection("users")
-                .whereEqualTo("email", updatedUser.getEmail())
-                .get()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful() && !task.getResult().isEmpty()) {
-                        DocumentSnapshot document = task.getResult().getDocuments().get(0);
+            // Find TextViews in the header
+            TextView navHeaderTitle = headerView.findViewById(R.id.nav_header_title);
+            TextView navHeaderSubtitle = headerView.findViewById(R.id.nav_header_subtitle);
 
-                        Map<String, Object> updatedData = new HashMap<>();
-                        updatedData.put("username", updatedUser.getUsername());
-                        updatedData.put("email", updatedUser.getEmail());
-                        updatedData.put("emailVerified", updatedUser.isEmailVerified());
-                        updatedData.put("password", updatedUser.getPassword());
+            // Fetch username and email from SharedPreferences
+            SharedPreferences sharedPreferences = requireContext().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);
+            String username = sharedPreferences.getString("username", "Default User");
+            String email = sharedPreferences.getString("email", "default@example.com");
 
-                        document.getReference().update(updatedData)
-                                .addOnSuccessListener(aVoid -> {
-                                    Toast.makeText(requireContext(), "Firestore updated successfully", Toast.LENGTH_SHORT).show();
-                                })
-                                .addOnFailureListener(e -> {
-                                    Toast.makeText(requireContext(), "Failed to update Firestore", Toast.LENGTH_SHORT).show();
-                                });
-                    } else {
-                        Toast.makeText(requireContext(), "User not found in Firestore", Toast.LENGTH_SHORT).show();
-                    }
-                })
-                .addOnFailureListener(e -> {
-                    Toast.makeText(requireContext(), "Error accessing Firestore: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                });
+            // Set the values in the header
+            navHeaderTitle.setText("Hello, " + username + "!");
+            navHeaderSubtitle.setText(email);
+        }
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        updateNavigationHeader();
+    }
 }

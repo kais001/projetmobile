@@ -18,7 +18,11 @@ public interface UserDao {
     @Query("SELECT COUNT(*) FROM users WHERE email = :email AND password = :password")
     int login(String email, String password);
 
-    @Query("SELECT * FROM users WHERE email = :email")
+    @Query("SELECT * FROM users WHERE id = :id")
+    User findById(long id);
+
+
+    @Query("SELECT * FROM users WHERE email = :email LIMIT 1")
     User findByEmail(String email);
 
     @Query("SELECT * FROM users")
@@ -49,5 +53,5 @@ public interface UserDao {
     User findByUsername(String username);
 
     @Query("SELECT * FROM users WHERE id = :userId")
-    User findByUserId(String userId);
+    User findByUserId(long userId);
 }

@@ -24,14 +24,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.navigation.NavigationView;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.DocumentSnapshot;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import tn.esprit.finalproject.Database.AppDatabase;
 import tn.esprit.finalproject.Entity.User;
@@ -101,6 +95,7 @@ public class RecyclerViewFragment extends Fragment implements UserAdapter.OnEdit
         // Clear shared preferences and navigate to LoginFragment
         requireContext().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
                 .edit()
+                .putBoolean("isLoggedIn", false)
                 .apply();
 
         FragmentManager fragmentManager = requireActivity().getSupportFragmentManager();
@@ -142,9 +137,6 @@ public class RecyclerViewFragment extends Fragment implements UserAdapter.OnEdit
                 AppDatabase db = AppDatabase.getInstance(requireContext());
                 db.userDao().update(updatedUser); // Update the user in Room
 
-                // Update the Firestore database
-                updateFirestoreUser(updatedUser);
-
                 requireActivity().runOnUiThread(() -> {
                     userAdapter.updateUser(updatedUser);
                     Toast.makeText(requireContext(), "User updated successfully", Toast.LENGTH_SHORT).show();
@@ -178,54 +170,6 @@ public class RecyclerViewFragment extends Fragment implements UserAdapter.OnEdit
     public void onResume() {
         super.onResume();
         updateNavigationHeader();
-    }
-
-    private void updateFirestoreUser(User updatedUser) {
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-
-        db.collection("users")
-                .whereEqualTo("email", updatedUser.getEmail())
-                .get()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful() && !task.getResult().isEmpty()) {
-                        DocumentSnapshot document = task.getResult().getDocuments().get(0);
-
-                        Map<String, Object> updatedData = new HashMap<>();
-                        updatedData.put("username", updatedUser.getUsername());
-                        updatedData.put("email", updatedUser.getEmail());
-                        updatedData.put("emailVerified", updatedUser.isEmailVerified());
-                        updatedData.put("password", updatedUser.getPassword());
-
-                        document.getReference().update(updatedData)
-                                .addOnSuccessListener(aVoid -> {
-                                    Toast.makeText(requireContext(), "Firestore updated successfully", Toast.LENGTH_SHORT).show();
-                                    updatePasswordInFirebase(updatedUser.getPassword());
-                                })
-                                .addOnFailureListener(e -> {
-                                    Toast.makeText(requireContext(), "Failed to update Firestore", Toast.LENGTH_SHORT).show();
-                                });
-                    } else {
-                        Toast.makeText(requireContext(), "User not found in Firestore", Toast.LENGTH_SHORT).show();
-                    }
-                });
-    }
-
-    private void updatePasswordInFirebase(String newPassword) {
-        FirebaseAuth auth = FirebaseAuth.getInstance();
-        FirebaseUser currentUser = auth.getCurrentUser();
-
-        if (currentUser != null) {
-            currentUser.updatePassword(newPassword)
-                    .addOnCompleteListener(task -> {
-                        if (task.isSuccessful()) {
-                            Toast.makeText(requireContext(), "Password updated successfully in Firebase Authentication", Toast.LENGTH_SHORT).show();
-                        } else {
-                            Toast.makeText(requireContext(), "Failed to update password in Firebase Authentication", Toast.LENGTH_SHORT).show();
-                        }
-                    });
-        } else {
-            Toast.makeText(requireContext(), "No authenticated user found", Toast.LENGTH_SHORT).show();
-        }
     }
 
 }
