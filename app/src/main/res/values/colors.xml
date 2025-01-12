@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="greencha3chou3i">#00FF00</color>
+    <color name="LightCoral">#FF1489</color>
+
+    <color name="orange">#FFC022</color>
+
+    <color name="buttonBackground">#3498db</color>
+
+    <color name="Bar">#2CA7B5</color>
+</resources>

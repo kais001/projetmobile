@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:title="Step counter"
+        android:id="@+id/podometry"
+        android:icon="@drawable/baseline_directions_run_24"
+
+        />
+
+    <item
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:title="Accomodation"
+        android:id="@+id/allAccommodations"
+        android:icon="@drawable/baseline_monetization_on_24" />
+
+    <item
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:title="Note Management"
+        android:id="@+id/myNote"
+        android:icon="@drawable/baseline_edit_note_24" />
+
+
+
+    <item
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:title="Reclamation menu"
+        android:id="@+id/Rec"
+        android:icon="@drawable/baseline_stars_24" />
+
+
+    <item
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:title="Ajouter Acc"
+        android:id="@+id/addacc"
+        android:icon="@drawable/baseline_account_circle_24" />
+
+
+</menu>
