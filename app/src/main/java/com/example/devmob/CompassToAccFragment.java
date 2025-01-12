@@ -1,21 +1,37 @@
 package com.example.devmob;
 
+import android.Manifest;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.location.Location;
 import android.os.Bundle;
+import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
+
 import java.util.Locale;
+
 public class CompassToAccFragment extends Fragment implements SensorEventListener {
+
     private SensorManager sensorManager;
     private Sensor magneticSensor, accelerometerSensor;
     private float[] gravity;
@@ -24,12 +40,17 @@ public class CompassToAccFragment extends Fragment implements SensorEventListene
     private ImageView compassImage;
 
     private double accommodationLat, accommodationLon;
+    private double currentLat = 0.0;
+    private double currentLon = 0.0;
+
+    private FusedLocationProviderClient fusedLocationProviderClient;
+    private LocationCallback locationCallback;
+    private ActivityResultLauncher<String[]> requestPermissionLauncher;
 
     public CompassToAccFragment() {
         // Required empty public constructor
     }
 
-    // Ajouter cette méthode newInstance pour passer les coordonnées
     public static CompassToAccFragment newInstance(double latitude, double longitude) {
         CompassToAccFragment fragment = new CompassToAccFragment();
         Bundle args = new Bundle();
@@ -41,12 +62,10 @@ public class CompassToAccFragment extends Fragment implements SensorEventListene
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_compass_to_mecca, container, false);
         directionText = view.findViewById(R.id.directionText);
-        compassImage = view.findViewById(R.id.compassImage); // Initialize the ImageView here
+        compassImage = view.findViewById(R.id.compassImage);
 
-        // Récupérer les coordonnées de l'accommodation depuis le Bundle
         if (getArguments() != null) {
             accommodationLat = getArguments().getDouble("latitude");
             accommodationLon = getArguments().getDouble("longitude");
@@ -56,13 +75,61 @@ public class CompassToAccFragment extends Fragment implements SensorEventListene
         magneticSensor = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
         accelerometerSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 
-        return view;  // Return the view correctly
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(requireContext());
+
+        // Initialize permission launcher
+        requestPermissionLauncher = registerForActivityResult(
+                new ActivityResultContracts.RequestMultiplePermissions(),
+                result -> {
+                    if (result.get(Manifest.permission.ACCESS_FINE_LOCATION) != null &&
+                            result.get(Manifest.permission.ACCESS_FINE_LOCATION)) {
+                        // Permission granted, request location updates
+                        requestLocationUpdates();
+                    } else {
+                        // Permission denied, handle accordingly
+                    }
+                });
+
+        // Request location updates
+        requestLocationUpdates();
+
+        return view;
+    }
+
+    private void requestLocationUpdates() {
+        if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // Request permissions
+            requestPermissionLauncher.launch(new String[]{
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+            });
+            return;
+        }
+
+        LocationRequest locationRequest = LocationRequest.create()
+                .setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY)
+                .setInterval(10000) // Update every 10 seconds
+                .setFastestInterval(5000); // Fastest interval 5 seconds
+
+        locationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(@NonNull LocationResult locationResult) {
+                if (locationResult != null && !locationResult.getLocations().isEmpty()) {
+                    Location location = locationResult.getLastLocation();
+                    if (location != null) {
+                        currentLat = location.getLatitude();
+                        currentLon = location.getLongitude();
+                    }
+                }
+            }
+        };
+        fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        // Register listeners for the sensors
         sensorManager.registerListener(this, accelerometerSensor, SensorManager.SENSOR_DELAY_UI);
         sensorManager.registerListener(this, magneticSensor, SensorManager.SENSOR_DELAY_UI);
     }
@@ -70,8 +137,11 @@ public class CompassToAccFragment extends Fragment implements SensorEventListene
     @Override
     public void onPause() {
         super.onPause();
-        // Unregister the listeners to prevent memory leaks
         sensorManager.unregisterListener(this);
+        // Remove location updates using the stored callback
+        if (locationCallback != null) {
+            fusedLocationProviderClient.removeLocationUpdates(locationCallback);
+        }
     }
 
     @Override
@@ -92,20 +162,15 @@ public class CompassToAccFragment extends Fragment implements SensorEventListene
                 float azimuth = (float) Math.toDegrees(orientation[0]);
                 azimuth = (azimuth + 360) % 360;
 
-                // Utiliser les coordonnées de l'accommodation pour calculer l'azimut
-                double currentLat = getCurrentLatitude();
-                double currentLon = getCurrentLongitude();
                 float accommodationAzimuth = calculateBearing(currentLat, currentLon, accommodationLat, accommodationLon);
 
                 float angleDifference = azimuth - accommodationAzimuth;
                 if (angleDifference < 0) angleDifference += 360;
 
-                // Update the direction text (optional)
                 directionText.setText(String.format(Locale.getDefault(), "Angle to Accommodation: %.2f°", angleDifference));
 
-                // Rotate the compass image based on the angle difference
                 if (compassImage != null) {
-                    compassImage.setRotation(angleDifference);  // Rotate the compass based on the angle
+                    compassImage.setRotation(angleDifference);
                 }
             }
         }
@@ -113,20 +178,8 @@ public class CompassToAccFragment extends Fragment implements SensorEventListene
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
-        // Handle sensor accuracy changes if necessary
     }
 
-    // Simulated function to get the current latitude (replace with actual GPS data)
-    private double getCurrentLatitude() {
-        return 21.3891; // Exemple: latitude de l'utilisateur
-    }
-
-    // Simulated function to get the current longitude (replace with actual GPS data)
-    private double getCurrentLongitude() {
-        return 39.8579; // Exemple: longitude de l'utilisateur
-    }
-
-    // Fonction pour calculer l'azimut entre deux coordonnées
     private float calculateBearing(double lat1, double lon1, double lat2, double lon2) {
         double lonDiff = Math.toRadians(lon2 - lon1);
         lat1 = Math.toRadians(lat1);
@@ -136,6 +189,6 @@ public class CompassToAccFragment extends Fragment implements SensorEventListene
         double x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(lonDiff);
         double bearing = Math.atan2(y, x);
         bearing = Math.toDegrees(bearing);
-        return (float) ((bearing + 360) % 360);  // Normalize to [0, 360)
+        return (float) ((bearing + 360) % 360);
     }
 }

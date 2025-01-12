@@ -25,6 +25,7 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
@@ -32,7 +33,7 @@ android {
 }
 
 dependencies {
-
+    // Dépendances existantes
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.activity)
@@ -42,6 +43,11 @@ dependencies {
     implementation(libs.navigation.ui)
     implementation(libs.room.runtime)
     implementation(libs.room.runtime.android)
+
+    // Nouvelle dépendance pour les services de localisation
+    implementation("com.google.android.gms:play-services-location:21.0.1")
+
+    // Dépendances de test
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
