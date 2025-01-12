@@ -3,6 +3,10 @@ package tn.esprit.finalproject;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -15,6 +19,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
@@ -27,11 +32,16 @@ import com.google.android.material.navigation.NavigationView;
 import tn.esprit.finalproject.Database.AppDatabase;
 import tn.esprit.finalproject.Entity.User;
 
-public class UserProfileFragment extends Fragment {
+public class UserProfileFragment extends Fragment implements SensorEventListener {
 
     private DrawerLayout drawerLayout;
     private TextView usernameTextView, emailTextView;
     private NavigationView navigationView;
+
+    private SensorManager sensorManager;
+    private Sensor accelerometer;
+    private static final float SHAKE_THRESHOLD = 12.0f; // Adjust this threshold
+    private long lastShakeTime = 0;
 
     @Nullable
     @Override
@@ -70,7 +80,76 @@ public class UserProfileFragment extends Fragment {
         // Dynamically update navigation header
         updateNavigationHeader();
 
+        // Initialize the SensorManager and accelerometer
+        sensorManager = (SensorManager) requireActivity().getSystemService(Context.SENSOR_SERVICE);
+        if (sensorManager != null) {
+            accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        }
+
         return view;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        updateNavigationHeader();
+
+        // Register the accelerometer listener
+        if (accelerometer != null) {
+            sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_UI);
+        }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        // Unregister the accelerometer listener
+        sensorManager.unregisterListener(this);
+    }
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+            float x = event.values[0];
+            float y = event.values[1];
+            float z = event.values[2];
+
+            // Calculate the magnitude of acceleration
+            double acceleration = Math.sqrt(x * x + y * y + z * z) - SensorManager.GRAVITY_EARTH;
+
+            // Check if acceleration exceeds the shake threshold
+            if (acceleration > SHAKE_THRESHOLD) {
+                long currentTime = System.currentTimeMillis();
+
+                // Avoid multiple shakes in quick succession
+                if (currentTime - lastShakeTime > 1000) { // 1-second gap
+                    lastShakeTime = currentTime;
+                    showLogoutPopup();
+                }
+            }
+        }
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+        // required to implement SensorEventListener
+    }
+
+    private void showLogoutPopup() {
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Logout Confirmation")
+                .setMessage("Do you want to logout?")
+                .setPositiveButton("Yes", (dialog, which) -> logoutUser())
+                .setNegativeButton("No", (dialog, which) -> dialog.dismiss())
+                .show();
+    }
+
+    private void logoutUser() {
+        requireContext().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
+                .edit()
+                .putBoolean("isLoggedIn", false)
+                .apply();
+        navigateToLoginFragment();
     }
 
     private boolean onNavigationItemSelected(MenuItem item) {
@@ -90,24 +169,40 @@ public class UserProfileFragment extends Fragment {
 
     private void fetchAndDisplayUserData() {
         SharedPreferences sharedPreferences = requireContext().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);
-        long id = sharedPreferences.getLong("id", -1); // Retrieve id
         String username = sharedPreferences.getString("username", "Default User");
         String email = sharedPreferences.getString("email", "default@example.com");
 
-        Log.d("UserProfileFragment", "Fetched id: " + id);
-        Log.d("UserProfileFragment", "Fetched username: " + username);
-        Log.d("UserProfileFragment", "Fetched email: " + email);
-
-        // Check if id is valid
-        if (id == -1) {
-            Toast.makeText(requireContext(), "Error: User ID not found. Please log in again.", Toast.LENGTH_SHORT).show();
-            navigateToLoginFragment();
-            return;
-        }
-
-        // Display the data
         usernameTextView.setText(username);
         emailTextView.setText(email);
+    }
+
+    private void navigateToHomeFragment() {
+        FragmentTransaction transaction = requireFragmentManager().beginTransaction();
+        transaction.replace(R.id.fragment_container, new UserHomeFragment());
+        transaction.addToBackStack(null);
+        transaction.commit();
+    }
+
+    private void navigateToLoginFragment() {
+        FragmentTransaction transaction = requireFragmentManager().beginTransaction();
+        transaction.replace(R.id.fragment_container, new LoginFragment());
+        transaction.commit();
+    }
+
+    @SuppressLint("SetTextI18n")
+    private void updateNavigationHeader() {
+        if (navigationView != null && navigationView.getHeaderCount() > 0) {
+            View headerView = navigationView.getHeaderView(0);
+            TextView navHeaderTitle = headerView.findViewById(R.id.nav_header_title);
+            TextView navHeaderSubtitle = headerView.findViewById(R.id.nav_header_subtitle);
+
+            SharedPreferences sharedPreferences = requireContext().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);
+            String username = sharedPreferences.getString("username", "Default User");
+            String email = sharedPreferences.getString("email", "default@example.com");
+
+            navHeaderTitle.setText("Hello, " + username + "!");
+            navHeaderSubtitle.setText(email);
+        }
     }
 
     private void editUserProfile() {
@@ -166,8 +261,6 @@ public class UserProfileFragment extends Fragment {
         dialogFragment.show(getChildFragmentManager(), "update_user");
     }
 
-
-
     private void deleteUserAccount() {
         SharedPreferences sharedPreferences = requireContext().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);
         String email = sharedPreferences.getString("email", "default@default.default");
@@ -186,52 +279,5 @@ public class UserProfileFragment extends Fragment {
                 });
             }
         }).start();
-    }
-
-    private void logoutUser() {
-        requireContext().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
-                .edit()
-                .putBoolean("isLoggedIn", false)
-                .apply();
-        navigateToLoginFragment();
-    }
-
-    private void navigateToHomeFragment() {
-        FragmentTransaction transaction = requireFragmentManager().beginTransaction();
-        transaction.replace(R.id.fragment_container, new UserHomeFragment());
-        transaction.addToBackStack(null);
-        transaction.commit();
-    }
-
-    private void navigateToLoginFragment() {
-        FragmentTransaction transaction = requireFragmentManager().beginTransaction();
-        transaction.replace(R.id.fragment_container, new LoginFragment());
-        transaction.commit();
-    }
-
-    @SuppressLint("SetTextI18n")
-    private void updateNavigationHeader() {
-        if (navigationView != null && navigationView.getHeaderCount() > 0) {
-            View headerView = navigationView.getHeaderView(0);
-
-            // Find TextViews in the header
-            TextView navHeaderTitle = headerView.findViewById(R.id.nav_header_title);
-            TextView navHeaderSubtitle = headerView.findViewById(R.id.nav_header_subtitle);
-
-            // Fetch username and email from SharedPreferences
-            SharedPreferences sharedPreferences = requireContext().getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);
-            String username = sharedPreferences.getString("username", "Default User");
-            String email = sharedPreferences.getString("email", "default@example.com");
-
-            // Set the values in the header
-            navHeaderTitle.setText("Hello, " + username + "!");
-            navHeaderSubtitle.setText(email);
-        }
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        updateNavigationHeader();
     }
 }
