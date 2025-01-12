@@ -156,10 +156,8 @@ public class UserHomeFragment extends Fragment {
 
     private void navigateToSteps() {
         // Navigate to HomeFragment
-        FragmentTransaction transaction = requireFragmentManager().beginTransaction();
-        transaction.replace(R.id.fragment_container, new StepCounterF());
-        transaction.addToBackStack(null);
-        transaction.commit();
+        Intent registerIntent = new Intent(requireContext(), StepCounterActivity.class);
+        startActivity(registerIntent); // Launch AddEventActivity
     }
 
     private void navigateToHoussem() {
