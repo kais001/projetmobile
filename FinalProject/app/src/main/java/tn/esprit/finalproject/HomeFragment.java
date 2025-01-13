@@ -67,17 +67,14 @@ public class HomeFragment extends Fragment {
         int id = item.getItemId();
 
         if (id == R.id.nav_home) {
-            // Handle Home click
             drawerLayout.closeDrawer(GravityCompat.START);
         } else if (id == R.id.nav_show_users) {
-            // Navigate to RecyclerViewFragment to show users
             FragmentManager fragmentManager = requireActivity().getSupportFragmentManager();
             fragmentManager.beginTransaction()
                     .replace(R.id.fragment_container, new RecyclerViewFragment())
                     .addToBackStack(null)
                     .commit();
         } else if (id == R.id.nav_logout) {
-            // Handle Logout
             logoutUser();
         } else if (id == R.id.nav_kais) {
             navigateToKais();
@@ -87,6 +84,8 @@ public class HomeFragment extends Fragment {
             navigateToHoussem();
         } else if (id == R.id.nav_houssem2) {
             navigateToHoussem2();
+        } else if (id == R.id.nav_ahmed) {
+
         }
 
         drawerLayout.closeDrawer(GravityCompat.START);

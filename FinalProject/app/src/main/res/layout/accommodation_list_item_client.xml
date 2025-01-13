@@ -13,7 +13,7 @@
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="4dp"
         android:text="Accommodation Name"
-        android:textColor="#2799A5"
+        android:textColor="?attr/colorOnBackground"
         android:textStyle="bold"
         android:textSize="16sp"
         app:layout_constraintStart_toStartOf="parent"

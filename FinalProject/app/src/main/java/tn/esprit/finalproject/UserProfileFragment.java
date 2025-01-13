@@ -2,6 +2,7 @@ package tn.esprit.finalproject;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -161,6 +162,16 @@ public class UserProfileFragment extends Fragment implements SensorEventListener
             drawerLayout.closeDrawer(GravityCompat.START);
         } else if (id == R.id.nav_logout) {
             logoutUser();
+        } else if (id == R.id.nav_kais) {
+            navigateToKais();
+        } else if (id == R.id.nav_houssem) {
+            navigateToHoussem();
+        } else if (id == R.id.nav_Step) {
+            navigateToSteps();
+        } else if (id == R.id.nav_aziz) {
+            navigateToAziz();
+        } else if (id == R.id.nav_ahmed) {
+
         }
 
         drawerLayout.closeDrawer(GravityCompat.START);
@@ -174,6 +185,33 @@ public class UserProfileFragment extends Fragment implements SensorEventListener
 
         usernameTextView.setText(username);
         emailTextView.setText(email);
+    }
+
+    private void navigateToKais() {
+        // Navigate to HomeFragment
+        FragmentTransaction transaction = requireFragmentManager().beginTransaction();
+        transaction.replace(R.id.fragment_container, new All_AccF_Client());
+        transaction.addToBackStack(null);
+        transaction.commit();
+    }
+
+    private void navigateToHoussem() {
+        // Navigate to HomeFragment
+        FragmentTransaction transaction = requireFragmentManager().beginTransaction();
+        transaction.replace(R.id.fragment_container, new All_EventFclient());
+        transaction.addToBackStack(null);
+        transaction.commit();
+    }
+
+    private void navigateToSteps() {
+        // Navigate to HomeFragment
+        Intent registerIntent = new Intent(requireContext(), StepCounterActivity.class);
+        startActivity(registerIntent); // Launch AddEventActivity
+    }
+
+    private void navigateToAziz() {
+        Intent registerIntent = new Intent(requireContext(), ShowPlacesActivity.class);
+        startActivity(registerIntent);
     }
 
     private void navigateToHomeFragment() {

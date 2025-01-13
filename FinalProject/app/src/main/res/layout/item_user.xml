@@ -6,13 +6,18 @@
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
     app:cardCornerRadius="12dp"
-    app:cardElevation="4dp">
+    app:cardElevation="6dp"
+    app:cardBackgroundColor="?attr/colorSurface"
+    app:cardUseCompatPadding="true"
+    app:cardPreventCornerOverlap="true"
+    android:foreground="?attr/selectableItemBackground">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:background="?attr/colorSurfaceVariant"
+        android:padding="16dp"
+        android:orientation="vertical">
 
         <!-- ID -->
         <LinearLayout
@@ -25,7 +30,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="ID: "
-                android:textColor="@color/black"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="14sp"
                 android:textStyle="bold"/>
 
@@ -34,7 +39,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="1"
-                android:textColor="@color/black"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="16sp"/>
         </LinearLayout>
 
@@ -49,7 +54,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Username: "
-                android:textColor="@color/black"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="14sp"
                 android:textStyle="bold"/>
 
@@ -58,7 +63,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="user1"
-                android:textColor="@color/black"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="16sp"/>
         </LinearLayout>
 
@@ -73,7 +78,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Email: "
-                android:textColor="@color/black"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="14sp"
                 android:textStyle="bold"/>
 
@@ -82,7 +87,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="user@example.com"
-                android:textColor="@color/black"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="16sp"/>
         </LinearLayout>
 
@@ -93,21 +98,25 @@
             android:orientation="horizontal"
             android:gravity="end">
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/editButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Edit"
                 android:layout_marginEnd="8dp"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                app:icon="@drawable/ic_edit"
+                app:iconTint="?attr/colorPrimary" />
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/deleteUserButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Delete"
+                app:backgroundTint="@color/red"
                 android:textColor="@android:color/white"
-                android:backgroundTint="@color/red"/>
+                app:icon="@drawable/ic_delete"
+                app:iconTint="@android:color/white" />
         </LinearLayout>
     </LinearLayout>
 

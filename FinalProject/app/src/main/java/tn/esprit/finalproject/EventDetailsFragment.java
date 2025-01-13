@@ -1,5 +1,6 @@
 package tn.esprit.finalproject;
 
+import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,6 +16,7 @@ public class EventDetailsFragment extends Fragment {
     private TextView priceTextView;
     private TextView descriptionTextView;
 
+    @SuppressLint("SetTextI18n")
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_event_details, container, false);
@@ -31,7 +33,6 @@ public class EventDetailsFragment extends Fragment {
             double price = getArguments().getDouble("price");
             String description = getArguments().getString("description");
 
-            // Afficher les informations dans les TextViews
             nameTextView.setText(name);
             addressTextView.setText(address);
             priceTextView.setText("$" + price);

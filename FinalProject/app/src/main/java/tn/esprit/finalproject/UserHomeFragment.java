@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -40,8 +41,12 @@ public class UserHomeFragment extends Fragment {
         TextView usernameTextView = view.findViewById(R.id.usernameTextView);
         drawerLayout = view.findViewById(R.id.drawer_layout);
         navigationView = view.findViewById(R.id.nav_view);
-        ImageView iconSettings = view.findViewById(R.id.icon_settings);
-        ImageView iconLogout = view.findViewById(R.id.icon_logout);
+        Button iconSettings = view.findViewById(R.id.icon_settings);
+        Button iconLogout = view.findViewById(R.id.icon_logout);
+        Button iconKais = view.findViewById(R.id.icon_kais);
+        Button iconHoussem = view.findViewById(R.id.icon_houssem);
+        Button iconAziz = view.findViewById(R.id.icon_aziz);
+        Button iconSteps = view.findViewById(R.id.icon_steps);
 
         // Setup toolbar
         Toolbar toolbar = view.findViewById(R.id.toolbar);
@@ -66,6 +71,10 @@ public class UserHomeFragment extends Fragment {
         // Set onClickListeners for the icons
         iconSettings.setOnClickListener(v -> openSettings());
         iconLogout.setOnClickListener(v -> logoutUser());
+        iconKais.setOnClickListener(v -> navigateToKais());
+        iconHoussem.setOnClickListener(v -> navigateToHoussem());
+        iconAziz.setOnClickListener(v -> navigateToAziz());
+        iconSteps.setOnClickListener(v -> navigateToSteps());
 
         return view;
     }
@@ -91,6 +100,8 @@ public class UserHomeFragment extends Fragment {
             navigateToSteps();
         } else if (id == R.id.nav_aziz) {
             navigateToAziz();
+        } else if (id == R.id.nav_ahmed) {
+            
         }
 
         drawerLayout.closeDrawer(GravityCompat.START);

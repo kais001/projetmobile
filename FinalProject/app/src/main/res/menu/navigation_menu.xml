@@ -24,10 +24,6 @@
         android:title="Add Event"
         android:icon="@drawable/ic_settings" />
     <item
-        android:id="@+id/nav_aziz"
-        android:title="Aziz"
-        android:icon="@drawable/ic_settings" />
-    <item
         android:id="@+id/nav_ahmed"
         android:title="Ahmed"
         android:icon="@drawable/ic_settings" />

@@ -2,6 +2,7 @@ package tn.esprit.finalproject;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -85,10 +86,50 @@ public class RecyclerViewFragment extends Fragment implements UserAdapter.OnEdit
         } else if (id == R.id.nav_logout) {
             // Handle Logout
             logoutUser();
+        } else if (id == R.id.nav_kais) {
+            navigateToKais();
+        } else if (id == R.id.nav_kais2) {
+            navigateToKais2();
+        } else if (id == R.id.nav_houssem) {
+            navigateToHoussem();
+        } else if (id == R.id.nav_houssem2) {
+            navigateToHoussem2();
+        } else if (id == R.id.nav_ahmed) {
+
         }
 
         drawerLayout.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    private void navigateToKais() {
+        // Navigate to HomeFragment
+        FragmentTransaction transaction = requireFragmentManager().beginTransaction();
+        transaction.replace(R.id.fragment_container, new All_AccF());
+        transaction.addToBackStack(null);
+        transaction.commit();
+    }
+
+    private void navigateToKais2() {
+        // Navigate to HomeFragment
+        Intent registerIntent = new Intent(requireContext(), AddAccommodationActivity.class);
+        startActivity(registerIntent); // Launch AddEventActivity
+
+    }
+
+    private void navigateToHoussem() {
+        // Navigate to HomeFragment
+        FragmentTransaction transaction = requireFragmentManager().beginTransaction();
+        transaction.replace(R.id.fragment_container, new All_EventF());
+        transaction.addToBackStack(null);
+        transaction.commit();
+    }
+
+    private void navigateToHoussem2() {
+        // Navigate to HomeFragment
+        Intent registerIntent = new Intent(requireContext(), AddEventActivity.class);
+        startActivity(registerIntent); // Launch AddEventActivity
+
     }
 
     private void logoutUser() {

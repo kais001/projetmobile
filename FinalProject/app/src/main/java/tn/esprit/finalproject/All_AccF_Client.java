@@ -108,6 +108,10 @@ public class All_AccF_Client extends Fragment {
             navigateToHoussem();
         } else if (id == R.id.nav_Step) {
             navigateToSteps();
+        } else if (id == R.id.nav_aziz) {
+            navigateToAziz();
+        } else if (id == R.id.nav_ahmed) {
+
         }
 
         drawerLayout.closeDrawer(GravityCompat.START);
@@ -134,6 +138,12 @@ public class All_AccF_Client extends Fragment {
         }
     }
 
+    private void navigateToAziz() {
+        // Navigate to HomeFragment
+        Intent registerIntent = new Intent(requireContext(), ShowPlacesActivity.class);
+        startActivity(registerIntent); // Launch AddEventActivity
+    }
+
     private void logoutUser() {
         Context context = requireContext();
         context.getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
@@ -149,7 +159,7 @@ public class All_AccF_Client extends Fragment {
     private void navigateToKais() {
         // Navigate to HomeFragment
         FragmentTransaction transaction = requireFragmentManager().beginTransaction();
-        transaction.replace(R.id.fragment_container, new All_AccF());
+        transaction.replace(R.id.fragment_container, new All_AccF_Client());
         transaction.addToBackStack(null);
         transaction.commit();
     }
@@ -157,7 +167,7 @@ public class All_AccF_Client extends Fragment {
     private void navigateToHoussem() {
         // Navigate to HomeFragment
         FragmentTransaction transaction = requireFragmentManager().beginTransaction();
-        transaction.replace(R.id.fragment_container, new All_EventF());
+        transaction.replace(R.id.fragment_container, new All_EventFclient());
         transaction.addToBackStack(null);
         transaction.commit();
     }
@@ -193,6 +203,7 @@ public class All_AccF_Client extends Fragment {
             return accommodationDAO.getAllAccommodations();
         }
 
+        @SuppressLint("NotifyDataSetChanged")
         @Override
         protected void onPostExecute(List<Accommodation> accommodations) {
             accommodationList.clear();

@@ -44,52 +44,60 @@
                 android:textColor="?attr/colorPrimaryVariant"
                 android:layout_marginBottom="32dp" />
 
-            <!-- Icon Section -->
-            <ImageView
+            <!-- Button Section -->
+            <Button
                 android:id="@+id/icon_settings"
                 android:layout_width="64dp"
                 android:layout_height="64dp"
-                android:src="@drawable/ic_settings"
+                android:background="@drawable/ic_settings"
                 android:contentDescription="Profile Icon"
                 android:layout_marginBottom="16dp" />
 
-            <ImageView
+            <Button
                 android:id="@+id/icon_kais"
                 android:layout_width="64dp"
                 android:layout_height="64dp"
-                android:src="@drawable/ic_visibility_off"
+                android:background="@drawable/ic_visibility_off"
                 android:contentDescription="Profile Icon"
                 android:layout_marginBottom="16dp" />
 
-            <ImageView
+            <Button
                 android:id="@+id/icon_houssem"
                 android:layout_width="64dp"
                 android:layout_height="64dp"
-                android:src="@drawable/ic_visibility_off"
+                android:background="@drawable/ic_visibility_off"
                 android:contentDescription="Profile Icon"
                 android:layout_marginBottom="16dp" />
 
-            <ImageView
+            <Button
                 android:id="@+id/icon_aziz"
                 android:layout_width="64dp"
                 android:layout_height="64dp"
-                android:src="@drawable/ic_visibility_off"
+                android:background="@drawable/ic_visibility_off"
                 android:contentDescription="Profile Icon"
                 android:layout_marginBottom="16dp" />
 
-            <ImageView
+            <Button
                 android:id="@+id/icon_ahmed"
                 android:layout_width="64dp"
                 android:layout_height="64dp"
-                android:src="@drawable/ic_visibility_off"
+                android:background="@drawable/ic_visibility_off"
                 android:contentDescription="Profile Icon"
                 android:layout_marginBottom="16dp" />
 
-            <ImageView
+            <Button
+                android:id="@+id/icon_steps"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:background="@drawable/ic_visibility_off"
+                android:contentDescription="Profile Icon"
+                android:layout_marginBottom="16dp" />
+
+            <Button
                 android:id="@+id/icon_logout"
                 android:layout_width="64dp"
                 android:layout_height="64dp"
-                android:src="@drawable/ic_logout"
+                android:background="@drawable/ic_logout"
                 android:contentDescription="Settings Icon"
                 android:layout_marginBottom="16dp" />
 
