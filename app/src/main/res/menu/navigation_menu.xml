@@ -1,0 +1,34 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_home"
+        android:title="Home"
+        android:icon="@drawable/ic_home" />
+    <item
+        android:id="@+id/nav_show_users"
+        android:icon="@drawable/ic_users"
+        android:title="Show Users" />
+    <item
+        android:id="@+id/nav_kais"
+        android:title="Show Accommodations"
+        android:icon="@drawable/ic_settings" />
+    <item
+        android:id="@+id/nav_kais2"
+        android:title="Add Accommodation"
+        android:icon="@drawable/ic_settings" />
+    <item
+        android:id="@+id/nav_houssem"
+        android:title="Show Events"
+        android:icon="@drawable/ic_settings" />
+    <item
+        android:id="@+id/nav_houssem2"
+        android:title="Add Event"
+        android:icon="@drawable/ic_settings" />
+    <item
+        android:id="@+id/nav_ahmed"
+        android:title="COV"
+        android:icon="@drawable/ic_settings" />
+    <item
+        android:id="@+id/nav_logout"
+        android:title="Logout"
+        android:icon="@drawable/ic_logout" />
+</menu>
