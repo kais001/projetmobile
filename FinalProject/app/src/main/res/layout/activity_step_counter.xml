@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:gravity="center">
+
+    <!-- Titre -->
+    <TextView
+        android:id="@+id/titleTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Step Counter"
+        android:textSize="24sp"
+        android:textColor="#2799A5"
+        android:layout_marginBottom="20dp"
+        android:textStyle="bold" />
+
+    <!-- Affichage du compteur de pas -->
+    <TextView
+        android:id="@+id/textViewStepCount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="0"
+        android:textSize="48sp"
+        android:textColor="#2799A5"
+        android:layout_marginBottom="20dp"
+        android:textStyle="bold" />
+
+    <!-- Affichage de la distance -->
+    <TextView
+        android:id="@+id/textViewDistance"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="0.00 m"
+        android:textSize="24sp"
+        android:textColor="#666666"
+        android:layout_marginBottom="20dp" />
+
+    <!-- Affichage du temps écoulé -->
+    <TextView
+        android:id="@+id/textViewTime"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="00:00"
+        android:textSize="24sp"
+        android:textColor="#666666"
+        android:layout_marginBottom="20dp" />
+
+    <!-- Bouton de réinitialisation des pas -->
+    <Button
+        android:id="@+id/resetButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Reset"
+        android:textColor="#FFFFFF"
+        android:background="@color/black"
+        android:layout_marginTop="20dp"
+        android:onClick="resetStepCount" />
+
+</LinearLayout>
